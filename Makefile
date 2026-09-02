@@ -44,13 +44,14 @@ redis-cli: ## Open a redis-cli shell
 
 # ---------------------------------------------------------------- verification
 .PHONY: verify verify-docs verify-secrets verify-compose lint typecheck test
-verify: verify-docs verify-compose verify-secrets lint typecheck test ## Full pre-push check
+verify: verify-docs verify-compose verify-secrets lint typecheck verify-boundaries test ## Full pre-push check
 	@echo ""
 	@echo "  ✅  verify passed"
 
-verify-docs: ## Check spec cross-references and requirements traceability
+verify-docs: ## Check spec cross-references, traceability and declared dependencies
 	@$(PY) scripts/check_spec_refs.py
 	@$(PY) scripts/check_traceability.py
+	@$(PY) scripts/check_dependencies.py
 
 verify-compose: ## Validate the docker-compose definition
 	@docker compose config --quiet && echo "  ✓ docker-compose valid"
@@ -75,9 +76,10 @@ test: ## Run the test suite
 
 # ---------------------------------------------------------------- boundaries
 .PHONY: verify-boundaries
-verify-boundaries: ## Enforce module import boundaries (ADR-009)
-	@if [ -f .importlinter ]; then $(BIN)lint-imports; \
-	 else echo "  ⏭  boundaries: not configured yet (phase 1)"; fi
+verify-boundaries: ## Enforce module import boundaries (ADR-009) + leakage gate 1
+	@if [ -f .importlinter ] && [ -d apps/api/atlas ]; then \
+	   $(BIN)lint-imports --verbose 2>/dev/null | tail -6 || $(BIN)lint-imports; \
+	 else echo "  ⏭  boundaries: not configured yet"; fi
 
 # ---------------------------------------------------------------- honesty gates
 .PHONY: test-leakage verify-audit-chain

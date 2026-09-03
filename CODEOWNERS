@@ -18,6 +18,23 @@
 # hard to detect later.
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# The team. Everyone here has write access and can review any pull request.
+#
+#   @thesurajgupta      lead — platform, ML, architecture
+#   @Vijayvardhanji
+#   @Rkamal21
+#   @VidushiGoel-1
+#   @sneha271307-hub
+#   @luckykhan933-byte
+#
+# Area lines below are deliberately still pointed at the lead: assigning people
+# to areas before they have picked one would be guesswork, and a wrong
+# CODEOWNERS entry sends review requests to someone with no context. Move a
+# handle onto an area line as soon as that person owns it — that is the point of
+# this file.
+# ---------------------------------------------------------------------------
+
 # Default reviewer for anything not matched below.
 *                                   @thesurajgupta
 

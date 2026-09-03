@@ -42,9 +42,18 @@ python3 -m venv .venv && .venv/bin/pip install --upgrade pip
 scanner, and they are the last thing standing between a mistake and a permanently published credential.
 
 ```bash
-make up          # PostgreSQL + PostGIS + H3 + TimescaleDB, and Redis
 make verify      # should print "verify passed"
 ```
+
+**Do you need Docker?** Only if you touch the backend, ML, or the database:
+
+```bash
+make up          # PostgreSQL + PostGIS + H3 + TimescaleDB, and Redis
+```
+
+Without it, the ~37 database tests skip themselves and say why. Frontend work runs entirely on mock
+data, so `make verify` passes on a machine with no Docker at all. CI always has a database and is
+configured to fail rather than skip, so coverage there is never quietly reduced.
 
 If `make verify` fails on a clean clone, that is a bug in the repo, not in your machine. Open an issue.
 
@@ -203,7 +212,17 @@ Opening a draft PR early to ask "am I going the right way?" is encouraged and co
 
 ---
 
-## 8. Quick reference
+## 8. Working with an AI assistant
+
+Most of us are. [`AI_PROMPTS.md`](AI_PROMPTS.md) has two prompts: one for **starting** a task (it makes your assistant
+confirm you actually have write access and that your git identity is right, before you write anything)
+and one for **pushing**. The line that matters most: *never weaken a check to make it pass*.
+
+The repo also ships context files that load automatically — `CLAUDE.md` for Claude Code, `.cursorrules`
+for Cursor, `.github/copilot-instructions.md` for Copilot, `AGENTS.md` and `.windsurfrules` for others.
+Your assistant should already know the project rules without you pasting anything.
+
+## 9. Quick reference
 
 | | |
 |---|---|

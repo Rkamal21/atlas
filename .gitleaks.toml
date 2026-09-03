@@ -12,5 +12,5 @@ paths = [
 ]
 regexes = [
   '''change-me-locally''',
-  '''generate-a-random-value-locally''',
+  '''generate-a-random-value-locally.*''',
 ]

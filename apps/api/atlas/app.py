@@ -24,6 +24,7 @@ from atlas.core.middleware import (
     unhandled_error_handler,
 )
 from atlas.core.ratelimit import close_redis
+from atlas.graph.router import router as graph_router
 from atlas.iam.router import router as iam_router
 
 
@@ -91,6 +92,7 @@ def create_app() -> FastAPI:
 
     app.include_router(iam_router)
     app.include_router(complaints_router)
+    app.include_router(graph_router)
 
     @app.get("/health", tags=["health"])
     async def health() -> dict[str, str]:

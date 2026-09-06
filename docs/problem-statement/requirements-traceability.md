@@ -105,6 +105,8 @@ clause above that it strengthens — none is scope creep.
 | Temporal splits with an embargo gap, never a random split | honest prediction; guards `ML-*` | `atlas.predict` | `LEAK-007` | IMPLEMENTED |
 | Self-exciting baseline a Tier 1 model must beat | "predict potential withdrawal hotspots" | `atlas.predict` | `ML-T1-BASE-001` | IMPLEMENTED |
 | Metrics refused, not caveated, when the dataset cannot support them | reproducible numbers (CLAUDE.md rule 2) | evaluation harness | `ML-QUOTE-001` | IMPLEMENTED |
+| Cash-out placed on the H3 lattice, with unplaced events counted | "predict potential withdrawal hotspots" | `atlas.predict` | `INT-PRED-001` | IMPLEMENTED |
+| Tier 1 ranks cells and exposes no uncalibrated probability | "predict potential withdrawal hotspots" | `atlas.predict` | `ML-T1-RANK-001` | IMPLEMENTED |
 | Network case grouping with quantitative reason | proactive intervention at scale; alert-fatigue control | `atlas.alerts` | `INT-GROUP-001` | PLANNED |
 | Grouping is human-accepted and splittable | jurisdictional ownership integrity | `atlas.cases` | `INT-GROUP-002` | PLANNED |
 | Recommended next step with reason | "proactive interventions" | `atlas.cases` | `INT-CASE-NEXT-001` | PLANNED |

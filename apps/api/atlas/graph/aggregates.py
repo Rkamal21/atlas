@@ -156,3 +156,67 @@ async def edge_activity(
             cash_out_count=int(m["cash_out_count"]),
         )
     return activity
+
+
+@dataclass(frozen=True)
+class CashOutOccurrence:
+    """One withdrawal, reduced to where it landed and when.
+
+    The *entity* rather than the endpoint: this module knows canonical entity
+    ids and nothing about geography. Turning one into a cell needs
+    ``atlas.entity`` and ``atlas.geo``, and composing the three is
+    ``atlas.predict``'s job — it sits above all of them, which is the only place
+    the join is allowed to happen (ADR-009).
+    """
+
+    entity_id: uuid.UUID
+    occurred_at: datetime
+
+
+_CASH_OUT_SQL = text(
+    """
+SELECT to_entity_id, occurred_at
+FROM graph.transaction_edge
+WHERE edge_type::text = :withdrew_at
+  AND observed_at <= :as_of
+  AND occurred_at <= :as_of
+  AND occurred_at > :since
+ORDER BY occurred_at
+"""
+)
+
+
+async def cash_out_occurrences(
+    session: AsyncSession,
+    *,
+    as_of: datetime,
+    since: datetime,
+) -> list[CashOutOccurrence]:
+    """Every withdrawal in ``(since, as_of]`` that was knowable at ``as_of``.
+
+    Ordered by ``occurred_at`` ascending, which the self-exciting baseline
+    relies on: it walks a cell's history and stops at the first event later than
+    the instant being scored. Sorting downstream would work and would put the
+    guarantee somewhere nobody looking at the query can see it.
+
+    Both bounds are required and neither has a default. ``since`` in particular:
+    an unbounded lower edge silently turns a training window into the entire
+    history of the system, which changes every rate the baseline estimates while
+    raising nothing.
+    """
+    if as_of.tzinfo is None or since.tzinfo is None:
+        raise ValueError("as_of and since must be timezone-aware")
+    if since >= as_of:
+        raise ValueError("since must be earlier than as_of")
+
+    result = await session.execute(
+        _CASH_OUT_SQL,
+        {"as_of": as_of, "since": since, "withdrew_at": EdgeType.WITHDREW_AT.value},
+    )
+    return [
+        CashOutOccurrence(
+            entity_id=row._mapping["to_entity_id"],
+            occurred_at=row._mapping["occurred_at"],
+        )
+        for row in result
+    ]

@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import re
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
@@ -290,3 +291,31 @@ async def get_or_create_canonical(
     session.add(entity)
     await session.flush()
     return entity
+
+
+async def public_refs_for(
+    session: AsyncSession, *, entity_ids: Sequence[uuid.UUID], as_of: datetime
+) -> dict[uuid.UUID, str]:
+    """Map canonical entity ids to their business references, as of an instant.
+
+    Exists so callers above this module can cross from an entity id to whatever
+    the owning system calls the same thing, without reading
+    ``entity.canonical_entity`` themselves (ADR-009).
+
+    Bounded by ``observed_at <= as_of`` like every other read here: an entity
+    resolved last week was not available to a reconstruction of last month, and
+    silently including it would let a later merge change what an earlier
+    prediction could see (leakage gate 4, §19.3).
+    """
+    if as_of.tzinfo is None:
+        raise ValueError("as_of must be timezone-aware; naive datetimes are ambiguous")
+    if not entity_ids:
+        return {}
+
+    result = await session.execute(
+        select(CanonicalEntity.id, CanonicalEntity.public_ref).where(
+            CanonicalEntity.id.in_(list(entity_ids)),
+            CanonicalEntity.observed_at <= as_of,
+        )
+    )
+    return {row[0]: row[1] for row in result}

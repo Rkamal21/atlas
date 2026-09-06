@@ -319,3 +319,30 @@ async def public_refs_for(
         )
     )
     return {row[0]: row[1] for row in result}
+
+
+async def entity_ids_for(
+    session: AsyncSession, *, public_refs: Sequence[str], as_of: datetime
+) -> dict[str, uuid.UUID]:
+    """Map business references to canonical entity ids, as of an instant.
+
+    The inverse of :func:`public_refs_for`, and needed for the same reason:
+    callers above this module cross between an owning system's reference and an
+    entity id without reading ``entity.canonical_entity`` themselves (ADR-009).
+
+    A reference with no canonical entity is absent rather than an error. An
+    endpoint that has never appeared in a transaction has no entity yet, which is
+    a normal state and not a data-quality problem.
+    """
+    if as_of.tzinfo is None:
+        raise ValueError("as_of must be timezone-aware; naive datetimes are ambiguous")
+    if not public_refs:
+        return {}
+
+    result = await session.execute(
+        select(CanonicalEntity.public_ref, CanonicalEntity.id).where(
+            CanonicalEntity.public_ref.in_(list(public_refs)),
+            CanonicalEntity.observed_at <= as_of,
+        )
+    )
+    return {row[0]: row[1] for row in result}

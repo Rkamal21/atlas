@@ -107,6 +107,8 @@ clause above that it strengthens — none is scope creep.
 | Metrics refused, not caveated, when the dataset cannot support them | reproducible numbers (CLAUDE.md rule 2) | evaluation harness | `ML-QUOTE-001` | IMPLEMENTED |
 | Cash-out placed on the H3 lattice, with unplaced events counted | "predict potential withdrawal hotspots" | `atlas.predict` | `INT-PRED-001` | IMPLEMENTED |
 | Tier 1 ranks cells and exposes no uncalibrated probability | "predict potential withdrawal hotspots" | `atlas.predict` | `ML-T1-RANK-001` | IMPLEMENTED |
+| Entity features aggregated to cells as both sum and max | "pattern detection" | `atlas.predict` | `INT-PRED-002` | IMPLEMENTED |
+| Tier 1 uplift over baseline, withheld until the data supports it | "predict potential withdrawal hotspots" | evaluation harness | `ML-T1-UPLIFT-001` | IMPLEMENTED |
 | Network case grouping with quantitative reason | proactive intervention at scale; alert-fatigue control | `atlas.alerts` | `INT-GROUP-001` | PLANNED |
 | Grouping is human-accepted and splittable | jurisdictional ownership integrity | `atlas.cases` | `INT-GROUP-002` | PLANNED |
 | Recommended next step with reason | "proactive interventions" | `atlas.cases` | `INT-CASE-NEXT-001` | PLANNED |

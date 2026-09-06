@@ -124,3 +124,53 @@ async def _computed_cells(
         )
         for row in rows
     }
+
+
+async def all_endpoint_cells(
+    session: AsyncSession, *, as_of: datetime, resolution: int
+) -> dict[str, str]:
+    """Every endpoint knowable at ``as_of``, mapped to its cell.
+
+    The reverse direction from :func:`endpoint_cells`, which answers for a known
+    set of references. Building a lattice needs the whole population: a cell with
+    endpoints but no cash-out yet is still a cell the model must be able to rank,
+    and asking only about endpoints that appear in the events would restrict the
+    candidate set to places value has already left — which is the one place it is
+    least likely to leave next.
+    """
+    if as_of.tzinfo is None:
+        raise ValueError("as_of must be timezone-aware; naive datetimes are ambiguous")
+    if resolution not in SUPPORTED_RESOLUTIONS:
+        raise ValueError(
+            f"resolution {resolution} is not supported; "
+            f"ADR-011 sweeps {sorted(SUPPORTED_RESOLUTIONS)}"
+        )
+
+    if resolution in STORED_RESOLUTIONS:
+        column = f"h3_r{resolution}"
+        rows = await session.execute(
+            text(
+                f"SELECT public_ref, {column} AS cell "  # noqa: S608
+                "FROM geo.cash_out_endpoint "
+                f"WHERE observed_at <= :as_of AND {column} IS NOT NULL"
+            ),
+            {"as_of": as_of},
+        )
+        return {row._mapping["public_ref"]: row._mapping["cell"] for row in rows}
+
+    import h3
+
+    rows = await session.execute(
+        text(
+            "SELECT public_ref, ST_Y(geom) AS lat, ST_X(geom) AS lon "
+            "FROM geo.cash_out_endpoint "
+            "WHERE observed_at <= :as_of AND geom IS NOT NULL"
+        ),
+        {"as_of": as_of},
+    )
+    return {
+        row._mapping["public_ref"]: h3.latlng_to_cell(
+            row._mapping["lat"], row._mapping["lon"], resolution
+        )
+        for row in rows
+    }

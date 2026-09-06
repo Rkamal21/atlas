@@ -20,6 +20,12 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from atlas.predict.dataset import (
+    ENDPOINT_COUNT_FEATURE,
+    MAX_PREFIX,
+    SUM_PREFIX,
+    cell_feature_names,
+)
 from atlas.predict.hawkes import CashOutEvent, fit
 from atlas.predict.tier1 import (
     BASELINE_FEATURE,
@@ -188,3 +194,20 @@ def test_the_baseline_is_offered_as_a_feature_not_blended_into_the_output() -> N
     # The original columns survive untouched — the baseline is an addition.
     assert enriched[0].features["txn_out_count_7d"] == 1.0
     assert enriched[0].label == 1
+
+
+def test_the_cell_feature_names_are_derived_and_ordered() -> None:
+    """The order is part of the contract, not a detail.
+
+    LightGBM consumes positional arrays, so a name list that came back in a
+    different order between training and scoring would feed one feature where
+    another was expected — silently, and with a plausible result.
+    """
+    names = cell_feature_names(["a", "b"])
+    assert names == (
+        f"{SUM_PREFIX}a",
+        f"{MAX_PREFIX}a",
+        f"{SUM_PREFIX}b",
+        f"{MAX_PREFIX}b",
+        ENDPOINT_COUNT_FEATURE,
+    )
